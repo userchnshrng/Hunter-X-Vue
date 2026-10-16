@@ -8,6 +8,18 @@ export default {
   meta: { title: "猎头业务", icon: "ep/briefcase", rank: 1 },
   children: [
     {
+      path: "/imports",
+      name: "Imports",
+      component: () => import("@/views/hunter/imports.vue"),
+      meta: { title: "人才导入", icon: "ep/upload" }
+    },
+    {
+      path: "/custom-fields",
+      name: "CustomFields",
+      component: () => import("@/views/hunter/custom-fields.vue"),
+      meta: { title: "自定义字段", icon: "ep/setting" }
+    },
+    {
       path: "/candidates",
       name: "Candidates",
       component: () => import("@/views/hunter/candidates.vue"),

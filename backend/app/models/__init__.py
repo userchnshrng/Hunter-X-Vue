@@ -139,3 +139,68 @@ class FileAsset(Record, Base):
     checksum: Mapped[str] = mapped_column(String(64))
     storage_key: Mapped[str] = mapped_column(String(36), unique=True)
     parse_status: Mapped[str] = mapped_column(String(30), default="not_started")
+
+
+class CustomFieldDefinition(Record, Base):
+    __tablename__ = "custom_field_definitions"
+    __table_args__ = (
+        UniqueConstraint("entity_type", "key", name="uq_custom_field_key"),
+        CheckConstraint("entity_type IN ('candidate','job')", name="ck_field_entity"),
+        CheckConstraint("value_type IN ('text','number','date','select')", name="ck_field_type"),
+    )
+    entity_type: Mapped[str] = mapped_column(String(20))
+    key: Mapped[str] = mapped_column(String(40))
+    label: Mapped[str] = mapped_column(String(100))
+    value_type: Mapped[str] = mapped_column(String(20))
+    options: Mapped[list] = mapped_column(JSON, default=list)
+    description: Mapped[str] = mapped_column(String(500), default="")
+    required: Mapped[bool] = mapped_column(Boolean, default=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    position: Mapped[int] = mapped_column(Integer, default=0)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+
+
+class ImportBatch(Record, Base):
+    __tablename__ = "import_batches"
+    __table_args__ = (
+        UniqueConstraint("created_by", "idempotency_key", name="uq_import_idempotency"),
+        CheckConstraint(
+            "status IN ('uploaded','review','ready','committed','cancelled')", name="ck_import_status"
+        ),
+    )
+    created_by: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
+    original_name: Mapped[str] = mapped_column(String(255))
+    file_format: Mapped[str] = mapped_column(String(10))
+    checksum: Mapped[str] = mapped_column(String(64), index=True)
+    storage_key: Mapped[str] = mapped_column(String(36), unique=True)
+    size: Mapped[int] = mapped_column(Integer)
+    sheets: Mapped[list] = mapped_column(JSON, default=list)
+    sheet_name: Mapped[str] = mapped_column(String(100), default="")
+    header_row: Mapped[int] = mapped_column(Integer, default=1)
+    mapping: Mapped[dict] = mapped_column(JSON, default=dict)
+    field_snapshot: Mapped[str] = mapped_column(String(64), default="")
+    revision: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(String(20), default="uploaded")
+    counts: Mapped[dict] = mapped_column(JSON, default=dict)
+    idempotency_key: Mapped[str | None] = mapped_column(String(100))
+    commit_digest: Mapped[str] = mapped_column(String(64), default="")
+    committed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    result: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+class ImportRow(Record, Base):
+    __tablename__ = "import_rows"
+    __table_args__ = (UniqueConstraint("batch_id", "sheet_name", "row_number", name="uq_import_row"),)
+    batch_id: Mapped[str] = mapped_column(ForeignKey("import_batches.id"), index=True)
+    sheet_name: Mapped[str] = mapped_column(String(100))
+    row_number: Mapped[int] = mapped_column(Integer)
+    original: Mapped[list] = mapped_column(JSON)
+    corrections: Mapped[dict] = mapped_column(JSON, default=dict)
+    normalized: Mapped[dict] = mapped_column(JSON, default=dict)
+    errors: Mapped[list] = mapped_column(JSON, default=list)
+    warnings: Mapped[list] = mapped_column(JSON, default=list)
+    duplicates: Mapped[list] = mapped_column(JSON, default=list)
+    decision: Mapped[str] = mapped_column(String(10), default="")
+    acknowledged: Mapped[bool] = mapped_column(Boolean, default=False)
+    status: Mapped[str] = mapped_column(String(20), default="review")
+    candidate_id: Mapped[str | None] = mapped_column(ForeignKey("candidates.id"))

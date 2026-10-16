@@ -32,7 +32,7 @@ def records(client):
 def test_initial_migration_matches_models(context):
     _, app, _ = context
     with app.state.engine.connect() as connection:
-        assert len(inspect(connection).get_table_names()) == 11
+        assert len(inspect(connection).get_table_names()) == 14
         assert compare_metadata(MigrationContext.configure(connection), Base.metadata) == []
 
 

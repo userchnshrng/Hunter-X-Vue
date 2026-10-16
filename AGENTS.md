@@ -3,11 +3,13 @@
 ## 项目与授权
 
 - 面向盘晋的中文猎头内部工作台；已选择 Pure Admin 精简版作为前端底座。
-- 当前阶段：阶段 A 已实现并完成验收；阶段 B–E 尚未实现。具体数据库 schema/迁移和配置修改仍按红线单独确认。
-- 用户已确认 `docs/ui-redesign-plan.md`；参考图风格 UI 已实现并通过隔离浏览器验收，记录见 `docs/ui-validation.md`。B–E 继续暂不推进，本次授权不扩大到数据库、凭据、CI 或发布。
+- 当前阶段：阶段 A、UI 和阶段 B 已实现并完成验收，分别见对应 validation 文档。C–E 尚未实现，新增敏感操作仍按红线单独确认。
+- 用户已确认 `docs/ui-redesign-plan.md`；参考图风格 UI 已验收，记录见 `docs/ui-validation.md`。后续业务页面沿用该主题。
+- 用户已确认 `docs/stage-b-plan.md`：授权阶段 B 实施、新增 3 张表、隔离测试迁移，以及备份后升级本地 SQLite 开发库。C–E 尚未推进；不重复请求已授权操作。
 - 已获具体授权：`docs/stage-a-review.md` 所列 10 张表的初始迁移、独立测试库和 `var/hunter.db` SQLite 开发库；不重复请求这一范围的授权。部署 PostgreSQL 尚未验证。
 - 大规模实现前提交具体方案，取得用户确认；当前 skill 的创建不等于业务实现已验收。
 - 默认中文沟通；代码、命令、变量和文件名使用英文。
+- 用户已确认 `docs/desktop-scope-plan.md`，授权清理手机专用代码及测试。业务仅在电脑浏览器使用；后续验收覆盖桌面窗口，不再要求手机端适配或手机端测试。实施状态以方案中的实际结果为准。
 - 先更新规范、再改变实践；下级规范仅在对应目录内细化本文件。
 
 ## 目录结构与命名
@@ -32,6 +34,12 @@
 - `docs/stage-a-review.md` 记录本阶段数据库范围与环境选择，`docs/upstream.md` 记录模板来源，`docs/development.md` 记录实际启动方式。后端虚拟环境放 `backend/.venv/` 并忽略版本控制。
 - `docs/ui-redesign-plan.md` 放 UI 改造范围、步骤和验收清单；`docs/assets/` 放用户提供且需在项目内保留的设计参考，文件采用英文小写连字符命名，不放业务附件或真实候选人资料。
 - `docs/ui-validation.md` 放 UI 实际实现、验证结果、截图路径和限制；派生截图仍放前端 `.artifacts/`，文档只链接，不复制测试资料。
+- `docs/stage-b-plan.md` 放阶段 B 的具体交付、接口、数据变更、依赖与验收方案；`docs/stage-b-validation.md` 仅在实际实施并产生验证结果时创建。
+- 阶段 B 获确认后，导入原件拟放 `var/imports/<random-id>`，文件名使用随机标识，批次元数据保留原名与摘要；只经认证接口访问，不自动清理。合成工作簿由测试在独立临时目录生成，不放真实业务资料。
+- 阶段 B 获确认后，SQLite 升级前备份拟放 `var/backups/stage-b-<timestamp>.db`；必须创建新文件并验证可读，不覆盖旧备份、不自动删除。
+- `backend/app/assets/` 放不含业务数据的空白导入模板，英文小写连字符命名；目录内 `AGENTS.md` 说明生成与保留规则。真实候选人工作簿仅在用户指定原位置只读核对，不复制到项目、测试或日志。
+- `docs/import-template-adaptation.md` 记录用户表格式兼容规则及验证；本次只改模板和兼容逻辑，实际人才导入由用户在预览后确认，不执行新的 schema 或数据迁移。
+- `docs/desktop-scope-plan.md` 记录桌面端支持范围、手机专用代码清理清单、保留项和验收方式。既有 validation 文档保留历史事实，不因范围调整删除旧截图或改写旧验证结果。
 
 ## 自主边界
 
@@ -54,6 +62,7 @@
 - 前端目录执行：`pnpm typecheck`、`pnpm lint:check`、`pnpm build`；构建使用独立目录且不自动清空旧输出。
 - 后端目录执行：`.venv/Scripts/python.exe -m ruff check app tests migrations`、`.venv/Scripts/python.exe -m pytest -q`。
 - 浏览器关键路径：前端目录 `node scripts/smoke.mjs`；使用已有 Playwright/浏览器，环境与隔离方式见 `docs/development.md`。
+- 新的 UI 验收仅针对桌面浏览器，默认视口宽度 1024、1280、1440、1920 px；其中 1024 px 覆盖电脑窄窗口，另验 1280 × 720 的较矮窗口。手机/平板专用视口不再列为验收项，不用跳过标记掩盖残留。
 - 后端固定依赖见 `backend/requirements-lock.txt`；前端使用锁文件。新增或调整后更新实际验证记录。
 - 至少覆盖前端类型检查与构建、后端静态检查及关键业务测试、真实浏览器关键路径。
 - 上游脚本若隐含删除、修改 `.env` 或数据迁移，不因脚本名称普通而直接执行。

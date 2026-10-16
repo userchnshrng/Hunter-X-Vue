@@ -1,10 +1,28 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { api, jobStatuses, messageOf, type Job, type Page } from "@/api/hunter";
+import {
+  api,
+  jobStatuses,
+  messageOf,
+  type Job,
+  type Company,
+  type Page
+} from "@/api/hunter";
 import JobEditor from "./job-editor.vue";
 import "./style.scss";
 const data = ref<Page<Job>>({ items: [], total: 0, page: 1, page_size: 20 });
 const q = ref("");
+const companyId = ref("");
+const companies = ref<Company[]>([]);
+async function searchCompanies(q = "") {
+  try {
+    companies.value = (
+      await api.get<Page<Company>>("/companies", { q, page_size: 100 })
+    ).items;
+  } catch (e) {
+    error.value = messageOf(e);
+  }
+}
 const status = ref("");
 const busy = ref(false);
 const error = ref("");
@@ -16,6 +34,7 @@ async function load() {
     data.value = await api.get<Page<Job>>("/jobs", {
       q: q.value,
       status: status.value,
+      company_id: companyId.value,
       page: data.value.page
     });
   } catch (e) {
@@ -23,6 +42,12 @@ async function load() {
   } finally {
     busy.value = false;
   }
+}
+function reset() {
+  q.value = "";
+  status.value = "";
+  companyId.value = "";
+  search();
 }
 function search() {
   data.value.page = 1;
@@ -32,7 +57,10 @@ function saved() {
   creating.value = false;
   void load();
 }
-onMounted(load);
+onMounted(() => {
+  void load();
+  void searchCompanies();
+});
 </script>
 <template>
   <div class="hunter-page">
@@ -57,7 +85,7 @@ onMounted(load);
           v-model="q"
           clearable
           aria-label="搜索职位"
-          placeholder="搜索职位名称"
+          placeholder="搜索职位或公司"
         /><el-select
           v-model="status"
           clearable
@@ -68,7 +96,22 @@ onMounted(load);
             :key="item[0]"
             :label="item[1]"
             :value="item[0]" /></el-select
+        ><el-select
+          v-model="companyId"
+          aria-label="公司筛选"
+          filterable
+          remote
+          :remote-method="searchCompanies"
+          clearable
+          placeholder="全部公司"
+          style="width: 180px"
+          ><el-option
+            v-for="item in companies"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id" /></el-select
         ><el-button native-type="submit">搜索</el-button
+        ><el-button @click="reset">重置</el-button
         ><span class="muted">共 {{ data.total }} 个职位</span>
       </form>
       <el-table

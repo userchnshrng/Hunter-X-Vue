@@ -5,19 +5,21 @@ import { useNav } from "@/layout/hooks/useNav";
 import HomeIcon from "~icons/ri/home-5-line";
 import PeopleIcon from "~icons/ri/group-line";
 import JobsIcon from "~icons/ri/briefcase-line";
+import ImportIcon from "~icons/ri/upload-cloud-line";
+import FieldIcon from "~icons/ri/list-settings-line";
 import CompanyIcon from "~icons/ri/building-line";
 import SidebarLogo from "./components/SidebarLogo.vue";
 import CollapseIcon from "~icons/ri/side-bar-line";
-import CloseIcon from "~icons/ri/close-line";
-const props = defineProps<{ mobile?: boolean }>();
 const { pureApp, toggleSideBar } = useNav();
 const icons = {
   "/welcome": HomeIcon,
   "/candidates": PeopleIcon,
   "/jobs": JobsIcon,
-  "/companies": CompanyIcon
+  "/companies": CompanyIcon,
+  "/imports": ImportIcon,
+  "/custom-fields": FieldIcon
 };
-const collapsed = computed(() => !props.mobile && !pureApp.sidebar.opened);
+const collapsed = computed(() => !pureApp.sidebar.opened);
 const menus = computed(() =>
   usePermissionStoreHook()
     .wholeMenus.flatMap(parent =>
@@ -33,14 +35,7 @@ const menus = computed(() =>
     aria-label="主导航"
   >
     <div class="sidebar-brand-row">
-      <SidebarLogo :collapse="collapsed" /><button
-        v-if="mobile"
-        class="icon-button"
-        aria-label="关闭导航菜单"
-        @click="toggleSideBar"
-      >
-        <CloseIcon aria-hidden="true" />
-      </button>
+      <SidebarLogo :collapse="collapsed" />
     </div>
     <p class="nav-caption">{{ collapsed ? "工作" : "日常工作" }}</p>
     <nav class="hunter-nav">
@@ -69,7 +64,6 @@ const menus = computed(() =>
       <p>让人才与机会有序相遇。</p>
     </div>
     <button
-      v-if="!mobile"
       class="sidebar-collapse"
       :aria-label="collapsed ? '展开侧栏' : '收起侧栏'"
       :aria-expanded="!collapsed"

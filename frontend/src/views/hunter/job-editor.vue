@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CustomFieldInputs from "./custom-field-inputs.vue";
 import { onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import {
@@ -12,6 +13,7 @@ import {
 const props = defineProps<{ record?: Job }>();
 const emit = defineEmits<{ saved: [job: Job]; cancel: [] }>();
 const form = reactive({
+  custom_fields: { ...(props.record?.custom_fields || {}) },
   company_id: props.record?.company_id || "",
   title: props.record?.title || "",
   team_size: props.record?.team_size ?? undefined,
@@ -132,6 +134,7 @@ onMounted(() => searchCompanies());
           placeholder="每行一条，便于后续逐项分析"
       /></el-form-item>
     </div>
+    <CustomFieldInputs v-model="form.custom_fields" entity="job" />
     <el-button native-type="submit" type="primary" :loading="busy"
       >保存职位</el-button
     ><el-button @click="emit('cancel')">取消</el-button>

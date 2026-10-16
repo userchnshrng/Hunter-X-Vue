@@ -54,6 +54,7 @@ class CandidateInput(Input):
     current_title: str = Field(default="", max_length=200)
     contact_methods: list[Contact] = Field(default_factory=list, max_length=20)
     resume_source: str = Field(default="", max_length=200)
+    custom_fields: dict = Field(default_factory=dict, max_length=50)
 
 
 class EmploymentInput(Input):
@@ -90,6 +91,7 @@ class JobInput(Input):
     jd_text: str = Field(default="", max_length=100000)
     requirements: list[str] = Field(default_factory=list, max_length=100)
     status: JobStatus = "open"
+    custom_fields: dict = Field(default_factory=dict, max_length=50)
 
 
 class ApplicationInput(Input):

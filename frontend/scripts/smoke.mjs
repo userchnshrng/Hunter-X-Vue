@@ -4,6 +4,7 @@ import { spawn } from "node:child_process";
 import { mkdir, access } from "node:fs/promises";
 import { resolve } from "node:path";
 import assert from "node:assert/strict";
+import { checkStageB } from "./stage-b-check.mjs";
 import {
   seedLegacyTheme,
   checkEmptyDashboard,
@@ -273,6 +274,7 @@ try {
     fullPage: true
   });
   await checkAuthenticatedUI(page, base, candidateUrl, settle);
+  const stageB = await checkStageB(page, base, candidateUrl, settle);
   await page.getByText("合成测试账号", { exact: true }).click();
   await page.getByText("退出系统", { exact: true }).click();
   await page.getByRole("heading", { name: "登录工作台" }).waitFor();
@@ -282,7 +284,11 @@ try {
   const ui = await checkLoginUI(page);
   assert.deepEqual(errors, []);
   console.log(
-    JSON.stringify({ status: "PASS", checks, screenshots: output, ui }, null, 2)
+    JSON.stringify(
+      { status: "PASS", checks, screenshots: output, ui, stageB },
+      null,
+      2
+    )
   );
 } finally {
   if (browser) await browser.close();

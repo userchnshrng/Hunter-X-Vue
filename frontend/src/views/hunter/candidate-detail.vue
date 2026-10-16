@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import RecordEditor from "./record-editor.vue";
+import type { Employment, Communication } from "@/api/hunter";
+import CustomFieldInputs from "./custom-field-inputs.vue";
 import { pickerPopperOptions } from "./ui";
 import { reactive, ref, watch } from "vue";
 import { useRoute } from "vue-router";
@@ -20,6 +23,10 @@ const detail = ref<Candidate>();
 const error = ref("");
 const busy = ref(false);
 const editing = ref(false);
+const editingRecord = ref<{
+  kind: "employment" | "communication";
+  record: Employment | Communication;
+}>();
 const saving = ref(false);
 const jobs = ref<Job[]>([]);
 const selectedJob = ref("");
@@ -171,6 +178,11 @@ watch(
         </div>
         <el-button @click="editing = true">编辑人才</el-button>
       </div>
+      <CustomFieldInputs
+        :model-value="detail.custom_fields"
+        entity="candidate"
+        readonly
+      />
       <div class="detail-grid">
         <div>
           <div class="surface">
@@ -212,7 +224,15 @@ watch(
               :key="item.id"
               class="record-card"
             >
-              <strong>{{ item.company_name }} · {{ item.title }}</strong>
+              <div class="record-title">
+                <strong>{{ item.company_name }} · {{ item.title }}</strong
+                ><el-button
+                  link
+                  type="primary"
+                  @click="editingRecord = { kind: 'employment', record: item }"
+                  >编辑经历</el-button
+                >
+              </div>
               <p class="muted">
                 {{ item.start_month || "开始年月未知" }} —
                 {{
@@ -400,6 +420,12 @@ watch(
                 ><span class="muted">{{ dateTime(item.occurred_at) }}</span>
               </div>
               <p class="record-text">{{ item.content }}</p>
+              <el-button
+                link
+                type="primary"
+                @click="editingRecord = { kind: 'communication', record: item }"
+                >编辑沟通</el-button
+              >
               <p v-if="item.outcome" class="muted">结果：{{ item.outcome }}</p>
               <p v-if="item.next_step" class="muted">
                 下一步：{{ item.next_step }}
@@ -430,4 +456,25 @@ watch(
       /></el-dialog>
     </template>
   </div>
+  <el-dialog
+    :model-value="!!editingRecord"
+    :title="
+      editingRecord?.kind === 'employment' ? '编辑任职经历' : '编辑沟通记录'
+    "
+    width="min(680px,95vw)"
+    append-to-body
+    destroy-on-close
+    @close="editingRecord = undefined"
+    ><RecordEditor
+      v-if="editingRecord && detail"
+      :kind="editingRecord.kind"
+      :record="editingRecord.record"
+      :owner-id="detail.id"
+      :applications="detail.applications"
+      @saved="
+        editingRecord = undefined;
+        load();
+      "
+      @cancel="editingRecord = undefined"
+  /></el-dialog>
 </template>

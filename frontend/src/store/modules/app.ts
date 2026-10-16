@@ -4,7 +4,6 @@ import {
   store,
   getConfig,
   storageLocal,
-  deviceDetection,
   responsiveStorageNameSpace
 } from "../utils";
 
@@ -23,7 +22,7 @@ export const useAppStore = defineStore("pure-app", {
       storageLocal().getItem<StorageConfigs>(
         `${responsiveStorageNameSpace()}layout`
       )?.layout ?? getConfig().Layout,
-    device: deviceDetection() ? "mobile" : "desktop",
+    device: "desktop",
     // 浏览器窗口的可视区域大小
     viewportSize: {
       width: document.documentElement.clientWidth,

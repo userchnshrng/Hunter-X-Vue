@@ -14,11 +14,13 @@ def serialize(record):
     return {column.key: getattr(record, column.key) for column in inspect(record).mapper.column_attrs}
 
 
-def page_records(db, model, conditions, page, page_size):
+def page_records(db, model, conditions, page, page_size, order_by=None):
     query = select(model).where(*conditions)
     total = db.scalar(select(func.count()).select_from(query.subquery()))
     items = db.scalars(
-        query.order_by(model.updated_at.desc(), model.id).offset((page - 1) * page_size).limit(page_size)
+        query.order_by(*(order_by or (model.updated_at.desc(), model.id)))
+        .offset((page - 1) * page_size)
+        .limit(page_size)
     ).all()
     return {
         "items": [serialize(item) for item in items],

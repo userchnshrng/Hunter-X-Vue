@@ -167,6 +167,22 @@ export async function checkAuthenticatedUI(page, base, candidateUrl, settle) {
   results.push(
     "keyboard sidebar collapse, focus retention and display preference restored after reload"
   );
+  await page.setViewportSize({ width: 1024, height: 1000 });
+  await page.getByRole("button", { name: "展开侧栏", exact: true }).waitFor();
+  await page
+    .getByRole("complementary", { name: "主导航", exact: true })
+    .waitFor();
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.getByRole("button", { name: "收起侧栏", exact: true }).waitFor();
+  await page.getByRole("button", { name: "收起侧栏", exact: true }).click();
+  await page.setViewportSize({ width: 1024, height: 1000 });
+  await settle(page);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await settle(page);
+  await page.getByRole("button", { name: "展开侧栏", exact: true }).click();
+  results.push(
+    "desktop window resizing keeps navigation available and preserves manual sidebar collapse"
+  );
 
   // Duplicate names and long company/title/contact text use the existing UI in the isolated test database.
   await page.goto(`${base}/candidates`);
@@ -212,8 +228,8 @@ export async function checkAuthenticatedUI(page, base, candidateUrl, settle) {
     "duplicate names remain separate; long Chinese fields and multiple contacts rendered"
   );
 
-  for (const width of [1440, 1280, 1024, 768, 390, 360]) {
-    await page.setViewportSize({ width, height: width <= 390 ? 844 : 1000 });
+  for (const width of [1024, 1280, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 1000 });
     for (const path of [
       "/welcome",
       "/candidates",
@@ -228,7 +244,7 @@ export async function checkAuthenticatedUI(page, base, candidateUrl, settle) {
       if (
         path === "/welcome" ||
         path === "/candidates" ||
-        (width === 390 && path.includes("/candidates/"))
+        (width === 1440 && path.includes("/candidates/"))
       )
         await screenshot(
           page,
@@ -240,9 +256,10 @@ export async function checkAuthenticatedUI(page, base, candidateUrl, settle) {
     );
     console.log(`UI viewport ${width}px: PASS`);
   }
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(`${base}${longCandidatePath}`);
   await settle(page);
-  await noOverflow(page, "360px long candidate detail");
+  await noOverflow(page, "desktop long candidate detail");
   await page
     .locator(".hunter-content")
     .evaluate(el => el.scrollTo(0, el.scrollHeight));
@@ -253,39 +270,21 @@ export async function checkAuthenticatedUI(page, base, candidateUrl, settle) {
     0
   );
   results.push(
-    "long talent detail fits phone; client navigation resets the content scroll position"
+    "long talent detail fits desktop; client navigation resets the content scroll position"
   );
 
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`${base}/candidates`);
+  // Desktop windows can be short; keep dialogs, pickers and actions reachable.
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto(`${base}/jobs`);
   await settle(page);
-  const openMenu = page.getByRole("button", { name: "打开导航菜单" });
-  await openMenu.focus();
-  await page.keyboard.press("Enter");
-  const nav = page.locator(".hunter-nav-drawer");
-  await nav.waitFor();
-  await page.keyboard.press("Escape");
-  await nav.waitFor({ state: "hidden" });
-  assert.ok(await openMenu.evaluate(el => el === document.activeElement));
-  await openMenu.click();
-  await nav.getByRole("link", { name: "职位库", exact: true }).click();
-  await page.waitForURL(`${base}/jobs`);
-  await nav.waitFor({ state: "hidden" });
-  await page.getByRole("heading", { name: "职位库", exact: true }).waitFor();
-  results.push(
-    "mobile drawer supports keyboard opening, Escape focus return and route navigation"
-  );
-
-  // Narrow forms, long select options, date picker and drawer must stay inside the viewport.
-  await page.setViewportSize({ width: 360, height: 844 });
   await page.getByRole("button", { name: "新增职位", exact: true }).click();
   let dialog = page.getByRole("dialog", { name: "新增职位", exact: true });
   await insideViewport(
     page.locator(".el-dialog:visible"),
     page,
-    "mobile job dialog"
+    "short desktop job dialog"
   );
-  await noOverflow(page, "mobile job dialog", [".el-dialog"]);
+  await noOverflow(page, "short desktop job dialog", [".el-dialog"]);
   await page.getByRole("combobox", { name: "公司", exact: true }).click();
   const companyOption = page.getByRole("option", {
     name: "合成示例 · 云杉科技",
@@ -298,7 +297,7 @@ export async function checkAuthenticatedUI(page, base, candidateUrl, settle) {
     "company dropdown"
   );
   await companyOption.click();
-  await screenshot(page, "job-editor-360");
+  await screenshot(page, "job-editor-1280x720");
   await page.getByRole("button", { name: "取消", exact: true }).click();
   await dialog.waitFor({ state: "hidden" });
 
@@ -310,7 +309,7 @@ export async function checkAuthenticatedUI(page, base, candidateUrl, settle) {
   await page
     .getByLabel("联系方式内容", { exact: true })
     .fill("synthetic-phone");
-  await noOverflow(page, "mobile candidate form", [".el-dialog"]);
+  await noOverflow(page, "short desktop candidate form", [".el-dialog"]);
   await page.getByPlaceholder("尚未建联可留空", { exact: true }).click();
   await page.locator(".el-date-picker:visible").waitFor();
   await insideViewport(
@@ -318,7 +317,7 @@ export async function checkAuthenticatedUI(page, base, candidateUrl, settle) {
     page,
     "date picker"
   );
-  await screenshot(page, "candidate-editor-date-360");
+  await screenshot(page, "candidate-editor-date-1280x720");
   await page.keyboard.press("Escape");
   // Escape belongs to the date picker, not to the underlying dialog.
   if (await dialog.isVisible()) {
@@ -341,11 +340,10 @@ export async function checkAuthenticatedUI(page, base, candidateUrl, settle) {
     page,
     "datetime confirmation button"
   );
-  await screenshot(page, "datetime-picker-360");
+  await screenshot(page, "datetime-picker-1280x720");
   await page.keyboard.press("Escape");
 
   await page.goto(`${base}/companies`);
-  await page.setViewportSize({ width: 390, height: 844 });
   await settle(page);
   await page
     .getByRole("button", { name: "合成示例 · 云杉科技", exact: true })
@@ -356,12 +354,14 @@ export async function checkAuthenticatedUI(page, base, candidateUrl, settle) {
     page,
     "company drawer"
   );
-  await noOverflow(page, "mobile company facts drawer", [".el-drawer__body"]);
-  await screenshot(page, "company-detail-390");
+  await noOverflow(page, "short desktop company facts drawer", [
+    ".el-drawer__body"
+  ]);
+  await screenshot(page, "company-detail-1280x720");
   await page.keyboard.press("Escape");
   await page.locator(".el-drawer:visible").waitFor({ state: "hidden" });
   results.push(
-    "mobile job/talent editors, contact rows, select/date/datetime popovers and company drawer fit viewport"
+    "1280x720 desktop job/talent editors, contact rows, select/date/datetime popovers and company drawer fit viewport"
   );
 
   await page.route("**/api/v1/dashboard", route =>
@@ -375,7 +375,7 @@ export async function checkAuthenticatedUI(page, base, candidateUrl, settle) {
   await settle(page);
   await page.getByRole("alert").waitFor();
   assert.equal(await page.locator(".stat-card").count(), 0);
-  await screenshot(page, "dashboard-error-390");
+  await screenshot(page, "dashboard-error-1280x720");
   await page.unroute("**/api/v1/dashboard");
   await page.getByRole("button", { name: "刷新数据", exact: true }).click();
   await page.locator(".stat-card").first().waitFor();
@@ -416,8 +416,8 @@ export async function checkAuthenticatedUI(page, base, candidateUrl, settle) {
   await screenshot(page, "candidates-desktop");
 }
 export async function checkLoginUI(page) {
-  for (const width of [1440, 768, 390, 360]) {
-    await page.setViewportSize({ width, height: width < 400 ? 844 : 1000 });
+  for (const width of [1024, 1280, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 1000 });
     await noOverflow(page, `${width}px login`, [
       "html",
       "body",
@@ -431,7 +431,7 @@ export async function checkLoginUI(page) {
     await screenshot(page, `login-${width}`);
   }
   results.push(
-    "login fits desktop, tablet and phone; zoom allowed by viewport meta"
+    "login fits desktop window widths; zoom allowed by viewport meta"
   );
   assert.ok(
     !(

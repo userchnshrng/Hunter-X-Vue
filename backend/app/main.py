@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import inspect, text
 from sqlalchemy.exc import IntegrityError, OperationalError
 
-from app.api import auth, files, records
+from app.api import auth, fields, files, imports, records
 from app.core.config import Settings, settings
 from app.core.database import make_engine
 
@@ -78,9 +78,9 @@ def create_app(config: Settings = settings):
             ready = inspect(connection).has_table("alembic_version")
         if not ready:
             raise HTTPException(503, "请先执行初始数据库迁移")
-        return {"status": "ok", "database": app.state.engine.dialect.name, "stage": "A"}
+        return {"status": "ok", "database": app.state.engine.dialect.name, "stage": "B"}
 
-    for router in (auth.router, records.router, files.router):
+    for router in (auth.router, records.router, files.router, fields.router, imports.router):
         app.include_router(router, prefix="/api/v1")
     return app
 

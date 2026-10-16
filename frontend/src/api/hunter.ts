@@ -29,6 +29,7 @@ export interface Candidate {
   current_title: string;
   contact_methods: Contact[];
   resume_source: string;
+  custom_fields: Record<string, string | number | null>;
   employments?: Employment[];
   communications?: Communication[];
   applications?: Application[];
@@ -54,6 +55,7 @@ export interface Job {
   jd_text: string;
   requirements: string[];
   status: string;
+  custom_fields: Record<string, string | number | null>;
   applications?: Application[];
 }
 export interface Application {
@@ -94,6 +96,61 @@ export interface Stats {
   open_jobs: number;
   applications: number;
   follow_ups: number;
+}
+
+export interface CustomField {
+  builtin?: boolean;
+  id: string;
+  key: string;
+  entity_type: "candidate" | "job";
+  label: string;
+  value_type: "text" | "number" | "date" | "select";
+  options: { value: string; label: string }[];
+  description: string;
+  required: boolean;
+  enabled: boolean;
+  position: number;
+  version: number;
+}
+export interface ImportBatch {
+  id: string;
+  original_name: string;
+  sheets: { name: string; headers: { row: number; cells: string[] }[] }[];
+  sheet_name: string;
+  header_row: number;
+  mapping: Record<string, string>;
+  revision: number;
+  status: "uploaded" | "review" | "ready" | "committed" | "cancelled";
+  counts: Record<string, number>;
+  created_at: string;
+  result: { created?: number; skipped?: number; candidate_ids?: string[] };
+  previous_batches?: string[];
+}
+export interface ImportRow {
+  id: string;
+  row_number: number;
+  original: { value: string; type: string; hyperlink?: string }[];
+  corrections: Record<string, string>;
+  normalized: { candidate: Partial<Candidate>; communication: string };
+  errors: { column: string; message: string }[];
+  warnings: { column: string; message: string }[];
+  duplicates: { kind: string; row?: number; name?: string; id?: string }[];
+  decision: string;
+  acknowledged: boolean;
+  status: string;
+  candidate_id: string | null;
+}
+
+export async function downloadPrivate(path: string, filename: string) {
+  const blob = await http.request<Blob>("get", `/api/v1${path}`, {
+    responseType: "blob"
+  });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export const api = {

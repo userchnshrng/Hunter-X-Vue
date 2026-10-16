@@ -34,7 +34,6 @@ body.hunter-layout {
   background: var(--hunter-canvas);
 
   .account-button,
-  .icon-button,
   .sidebar-collapse {
     border: 0;
   }
@@ -57,9 +56,6 @@ body.hunter-layout {
 
   &.is-collapsed {
     grid-template-columns: 80px minmax(0, 1fr);
-  }
-  &.is-mobile {
-    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -152,23 +148,6 @@ body.hunter-layout {
 .account-copy small {
   font-size: 11px;
   color: var(--hunter-muted);
-}
-.icon-button {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  color: var(--hunter-muted);
-  cursor: pointer;
-  background: #fff;
-  border: 1px solid var(--hunter-border);
-  border-radius: 13px;
-}
-.icon-button svg {
-  width: 20px;
-  height: 20px;
 }
 .hunter-sidebar {
   display: flex;
@@ -316,12 +295,6 @@ body.hunter-layout {
   justify-content: center;
   padding: 0;
 }
-.hunter-nav-drawer .el-drawer__body {
-  padding: 0;
-}
-.hunter-nav-drawer .hunter-sidebar {
-  padding-top: 22px;
-}
 .skip-link {
   position: absolute;
   top: -60px;
@@ -370,9 +343,6 @@ body.hunter-layout {
   }
   .el-drawer {
     border-radius: 20px 0 0 20px;
-  }
-  .hunter-nav-drawer {
-    border-radius: 0 20px 20px 0;
   }
   .el-drawer__title {
     font-weight: 650;
@@ -433,74 +403,6 @@ body.hunter-layout {
 @media (max-width: 1100px) {
   .navbar-date {
     display: none;
-  }
-}
-@media (max-width: 800px) {
-  .hunter-shell {
-    width: 100%;
-    height: 100dvh;
-    margin: 0;
-    border: 0;
-    border-radius: 0;
-  }
-  .hunter-navbar {
-    gap: 10px;
-    min-height: 72px;
-    padding: 14px 20px;
-  }
-  .navbar-section,
-  .context-divider {
-    display: none;
-  }
-  .navbar-context {
-    flex: 1;
-  }
-  .skip-link {
-    left: 16px;
-  }
-}
-@media (max-width: 480px) {
-  .hunter-navbar {
-    padding: 12px 16px;
-  }
-  .account-copy {
-    display: none;
-  }
-  .account-button {
-    min-height: 44px;
-  }
-  body.hunter-layout {
-    .el-dialog {
-      max-height: calc(100dvh - 24px);
-      padding: 20px 16px;
-      margin-top: 12px;
-    }
-    .el-button,
-    .el-input__wrapper,
-    .el-select__wrapper {
-      min-height: 44px;
-    }
-    .el-input__inner,
-    .el-textarea__inner,
-    .el-select__input {
-      font-size: 16px;
-    }
-    .el-drawer__body {
-      padding: 20px 16px;
-    }
-    .hunter-nav-drawer .el-drawer__body {
-      padding: 0;
-    }
-    .el-picker-panel {
-      max-width: calc(100vw - 24px);
-    }
-    .el-picker__popper {
-      max-height: calc(100dvh - 24px);
-      overflow-y: auto;
-    }
-    .el-date-picker.has-time {
-      width: 320px;
-    }
   }
 }
 @media (prefers-reduced-motion: reduce) {

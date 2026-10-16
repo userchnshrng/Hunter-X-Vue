@@ -2,10 +2,9 @@
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { useNav } from "@/layout/hooks/useNav";
-import MenuIcon from "~icons/ri/menu-line";
 import LogoutIcon from "~icons/ri/logout-circle-r-line";
 import ArrowIcon from "~icons/ri/arrow-down-s-line";
-const { device, username, logout, toggleSideBar, pureApp } = useNav();
+const { username, logout } = useNav();
 const route = useRoute();
 const date = new Intl.DateTimeFormat("zh-CN", {
   month: "long",
@@ -16,15 +15,6 @@ const context = computed(() => route.meta.title || "工作台");
 </script>
 <template>
   <header class="hunter-navbar">
-    <button
-      v-if="device === 'mobile'"
-      class="icon-button"
-      aria-label="打开导航菜单"
-      :aria-expanded="pureApp.sidebar.opened"
-      @click="toggleSideBar"
-    >
-      <MenuIcon aria-hidden="true" />
-    </button>
     <div class="navbar-context">
       <span class="navbar-section">我的工作空间</span
       ><span class="context-divider">/</span><strong>{{ context }}</strong>

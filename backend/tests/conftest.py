@@ -14,6 +14,13 @@ from app.main import create_app
 from app.models import User
 
 
+class TestContext(tuple):
+    __test__ = False
+
+    def __repr__(self):
+        return "<isolated application context; credentials redacted>"
+
+
 @pytest.fixture
 def context():
     # Leave isolated artifacts in the system temp directory; do not delete user files.
@@ -34,7 +41,7 @@ def context():
         )
         db.commit()
     with TestClient(app) as client:
-        yield client, app, password
+        yield TestContext((client, app, password))
 
 
 @pytest.fixture

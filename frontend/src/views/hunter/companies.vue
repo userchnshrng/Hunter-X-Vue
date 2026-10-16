@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import RecordEditor from "./record-editor.vue";
+import type { Fact } from "@/api/hunter";
 import { pickerPopperOptions } from "./ui";
 import { onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
@@ -22,6 +24,7 @@ const busy = ref(false);
 const saving = ref(false);
 const editing = ref(false);
 const detail = ref<Company>();
+const editingFact = ref<Fact>();
 const companyId = ref("");
 const form = reactive({
   name: "",
@@ -204,6 +207,9 @@ onMounted(load);
         </p>
         <div v-for="item in detail.facts" :key="item.id" class="record-card">
           <p class="record-text">{{ item.content }}</p>
+          <el-button link type="primary" @click="editingFact = item"
+            >编辑资料</el-button
+          >
           <p class="muted">
             资料日期：{{ item.fact_date || "未知" }} · 来源：{{ item.source }}
           </p>
@@ -245,4 +251,22 @@ onMounted(load);
       ></el-drawer
     >
   </div>
+  <el-dialog
+    :model-value="!!editingFact"
+    title="编辑公司资料"
+    width="min(640px,95vw)"
+    append-to-body
+    destroy-on-close
+    @close="editingFact = undefined"
+    ><RecordEditor
+      v-if="editingFact && detail"
+      kind="fact"
+      :record="editingFact"
+      :owner-id="detail.id"
+      @saved="
+        editingFact = undefined;
+        show(detail.id);
+      "
+      @cancel="editingFact = undefined"
+  /></el-dialog>
 </template>

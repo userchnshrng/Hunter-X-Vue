@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CustomFieldInputs from "./custom-field-inputs.vue";
 import { ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
@@ -97,6 +98,10 @@ watch(
         </div>
         <el-button @click="editing = true">编辑职位</el-button>
       </div>
+      <CustomFieldInputs
+        :model-value="detail.custom_fields"
+        entity="job"
+        readonly />
       <div class="detail-grid">
         <div>
           <div class="surface">

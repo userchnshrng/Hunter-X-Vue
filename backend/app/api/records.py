@@ -17,6 +17,7 @@ from app.schemas import (
     JobInput,
     StatusInput,
 )
+from app.services.custom_fields import validate_fields
 from app.services.records import apply_values, get_record, page_records, save, serialize
 
 router = APIRouter(dependencies=[Depends(current_user)], tags=["workbench"])
@@ -89,6 +90,8 @@ def candidates(
     page: Page = 1,
     page_size: PageSize = 20,
 ):
+    if contacted_from and contacted_to and contacted_from > contacted_to:
+        raise HTTPException(422, "建联开始日期不能晚于结束日期")
     conditions = []
     if q:
         conditions.append(
@@ -108,11 +111,12 @@ def candidates(
     return page_records(db, Candidate, conditions, page, page_size)
 
 
-def candidate_values(body, db):
+def candidate_values(body, db, existing=None):
     values = body.model_dump()
     if body.current_company_id:
         company = get_record(db, Company, body.current_company_id)
         values["current_company_name"] = company.name
+    values["custom_fields"] = validate_fields(db, "candidate", body.custom_fields, existing)
     return values
 
 
@@ -147,7 +151,7 @@ def candidate(record_id: str, db: Db):
 @router.patch("/candidates/{record_id}")
 def update_candidate(record_id: str, body: CandidateInput, db: Db):
     record = get_record(db, Candidate, record_id)
-    apply_values(record, candidate_values(body, db))
+    apply_values(record, candidate_values(body, db, record.custom_fields))
     return save(db, record)
 
 
@@ -170,10 +174,17 @@ def create_communication(record_id: str, body: CommunicationInput, db: Db):
 
 
 @router.get("/jobs")
-def jobs(db: Db, q: str = "", status: str = "", page: Page = 1, page_size: PageSize = 20):
+def jobs(
+    db: Db, q: str = "", status: str = "", company_id: str = "", page: Page = 1, page_size: PageSize = 20
+):
     conditions = []
     if q:
-        conditions.append(Job.title.contains(q, autoescape=True))
+        companies = select(Company.id).where(Company.name.contains(q, autoescape=True))
+        conditions.append(or_(Job.title.contains(q, autoescape=True), Job.company_id.in_(companies)))
+    if company_id:
+        conditions.append(Job.company_id == company_id)
+    if status and status not in ("draft", "open", "paused", "closed"):
+        raise HTTPException(422, "招聘状态无效")
     if status:
         conditions.append(Job.status == status)
     result = page_records(db, Job, conditions, page, page_size)
@@ -185,7 +196,9 @@ def jobs(db: Db, q: str = "", status: str = "", page: Page = 1, page_size: PageS
 @router.post("/jobs", status_code=201)
 def create_job(body: JobInput, db: Db):
     get_record(db, Company, body.company_id)
-    return save(db, Job(**body.model_dump()))
+    values = body.model_dump()
+    values["custom_fields"] = validate_fields(db, "job", body.custom_fields)
+    return save(db, Job(**values))
 
 
 @router.get("/jobs/{record_id}")
@@ -200,7 +213,9 @@ def job(record_id: str, db: Db):
 def update_job(record_id: str, body: JobInput, db: Db):
     record = get_record(db, Job, record_id)
     get_record(db, Company, body.company_id)
-    apply_values(record, body.model_dump())
+    values = body.model_dump()
+    values["custom_fields"] = validate_fields(db, "job", body.custom_fields, record.custom_fields)
+    apply_values(record, values)
     return save(db, record)
 
 
@@ -245,4 +260,48 @@ def create_application(body: ApplicationInput, db: Db):
 def update_application(record_id: str, body: StatusInput, db: Db):
     record = get_record(db, Application, record_id)
     record.status = body.status
+    return save(db, record)
+
+
+@router.get("/candidate-sources")
+def candidate_sources(db: Db):
+    return list(
+        db.scalars(
+            select(Candidate.resume_source)
+            .where(Candidate.resume_source != "")
+            .distinct()
+            .order_by(Candidate.resume_source)
+        )
+    )
+
+
+def child_record(db, model, parent_field, parent_id, record_id):
+    record = get_record(db, model, record_id)
+    if getattr(record, parent_field) != parent_id:
+        raise HTTPException(404, "记录不存在")
+    return record
+
+
+@router.patch("/candidates/{candidate_id}/employments/{record_id}")
+def update_employment(candidate_id: str, record_id: str, body: EmploymentInput, db: Db):
+    record = child_record(db, Employment, "candidate_id", candidate_id, record_id)
+    if body.company_id:
+        get_record(db, Company, body.company_id)
+    apply_values(record, body.model_dump())
+    return save(db, record)
+
+
+@router.patch("/candidates/{candidate_id}/communications/{record_id}")
+def update_communication(candidate_id: str, record_id: str, body: CommunicationInput, db: Db):
+    record = child_record(db, Communication, "candidate_id", candidate_id, record_id)
+    if body.application_id and get_record(db, Application, body.application_id).candidate_id != candidate_id:
+        raise HTTPException(422, "推荐记录不属于该人才")
+    apply_values(record, body.model_dump())
+    return save(db, record)
+
+
+@router.patch("/companies/{company_id}/facts/{record_id}")
+def update_fact(company_id: str, record_id: str, body: FactInput, db: Db):
+    record = child_record(db, CompanyFact, "company_id", company_id, record_id)
+    apply_values(record, body.model_dump())
     return save(db, record)

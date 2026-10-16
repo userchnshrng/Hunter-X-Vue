@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CustomFieldInputs from "./custom-field-inputs.vue";
 import { pickerPopperOptions } from "./ui";
 import { reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
@@ -7,6 +8,7 @@ import { api, messageOf, type Candidate, type Contact } from "@/api/hunter";
 const props = defineProps<{ record?: Candidate }>();
 const emit = defineEmits<{ saved: [candidate: Candidate]; cancel: [] }>();
 const form = reactive({
+  custom_fields: { ...(props.record?.custom_fields || {}) },
   name: props.record?.name || "",
   contacted_on: props.record?.contacted_on || "",
   current_company_name: props.record?.current_company_name || "",
@@ -105,6 +107,7 @@ async function save() {
         >
       </div>
     </el-form-item>
+    <CustomFieldInputs v-model="form.custom_fields" entity="candidate" />
     <el-button type="primary" native-type="submit" :loading="busy"
       >保存人才</el-button
     ><el-button @click="emit('cancel')">取消</el-button>

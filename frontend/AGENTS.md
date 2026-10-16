@@ -5,9 +5,11 @@
 - 状态集中在 Pinia；认证凭据不进 localStorage。业务和认证连接真实后端，不使用 mock 运行。
 - `scripts/` 放跨平台开发/无删除构建入口；构建输出到 `.artifacts/build-<run-id>/`，保留旧输出。
 - `scripts/smoke.mjs` 用现有 Playwright 启动独立测试前后端，截图放 `.artifacts/browser-<run-id>/`，数据库和合成账号在系统临时目录，不使用开发库。
-- `scripts/ui-check.mjs` 是 smoke 调用的 UI 验收模块，覆盖主题迁移、响应式、弹层、键盘和空态；截图及结果放 `.artifacts/ui-<run-id>/`，不得把合成资料写入开发库。
+- `scripts/ui-check.mjs` 是 smoke 调用的 UI 验收模块，后续覆盖主题迁移、桌面窗口布局、弹层、键盘和空态；截图及结果放 `.artifacts/ui-<run-id>/`，不得把合成资料写入开发库。
+- 阶段 B 已获确认；导入及字段管理组件放 `src/views/hunter/`；`scripts/stage-b-check.mjs` 由 smoke 调用，产物放 `.artifacts/stage-b-<run-id>/`，不创建空占位实现。
 - 不创建或修改 `.env`、CI/CD；开发端口与代理通过 Vite 代码和进程环境设置。
 - `pnpm typecheck`；`pnpm lint:check`；`pnpm build`。按实际脚本验证；无 `--fix` 的检查不改写文件。
 - 原模板文件保留，停用示例路由和 mock，不删除目录。界面以日常中文业务术语为主。
-- UI 改造前读 `../docs/ui-redesign-plan.md` 和 `../skill/hunter-workbench/references/ui-design.md`。方案已获用户确认，可连续实施并验收；B–E 暂不推进。
+- UI 改造前读 `../docs/ui-redesign-plan.md` 和 `../skill/hunter-workbench/references/ui-design.md`。阶段 B 已按 `../docs/stage-b-plan.md` 获准实施，C–E 尚未推进。
 - 主题文件为 `src/style/hunter-theme.scss`；颜色、圆角、间距通过命名空间变量统一，业务排版放 `src/views/hunter/style.scss`，日期弹层定位共用 `src/views/hunter/ui.ts`。新验收截图放 `.artifacts/ui-<run-id>/`。
+- 用户已确认 `../docs/desktop-scope-plan.md`：清理手机专用代码及测试，不再新增手机布局或导航。桌面默认覆盖 1024/1280/1440/1920 px 及 1280 × 720 较矮窗口；保留电脑窗口缩放、侧栏收缩、表格局部滚动、键盘和弹层边界检查。保留上游未启用模板、公共存储与兼容接口，不整文件删除或移除共享依赖。
